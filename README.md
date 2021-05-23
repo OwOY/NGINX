@@ -4,10 +4,13 @@
 ```
 sudo yum -y install nginx
 ```
-
 - 檢視Nginx配置檔  
 ```
 sudo nano /etc/nginx/nginx.conf
+```
+- 開啟Nginx
+```
+systemctl enable nginx
 ```
 ## 防火牆設定
 - 若沒有firewalld 可用下列指令下載
@@ -28,13 +31,22 @@ systemctl reload firewalld
 ```
 systemctl enable firewalld
 ```
-- 開放port(http、https、8089)   
+- 開放port(http、https、8089)
 ```
-firewalld-cmd --permanent --zone=public --add-service=http
-firewalld-cmd --permanent --zone=public --add-service=https
-firewall-cmd --zone=public --add-port=8089/tcp --permanent
+firewall-cmd --zone=public --permanent --add-service=http
+firewall-cmd --zone=public --permanent --add-service=https
+firewall-cmd --zone=public --add-port=8089/tcp --permanent   #永久新增
+```
+- 重新載入firewall設定
+```
 sudo firewall-cmd --reload
 ```
+- 移除port
+```
+firewall-cmd --zone=public --remove-service=http
+firewall-cmd --zone=public --remove-service=http --permanent  #永久移除
+```
+
 - 列出防火牆設定內容  
 ```
 firewall-cmd --list-all
