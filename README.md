@@ -38,7 +38,31 @@ sudo firewall-cmd --reload
 ```
 firewall-cmd --list-all
 ```
+## Nginx設定  
+```
+# etc/nginx/nginx.conf
+server {
+        listen       80;
+        server_name  34.145.108.85;
+        root         /home/asd1234op/code/temp/4D;   #flask或是網頁位置
 
+        # Load configuration files for the default server block.
+        include /etc/nginx/default.d/*.conf;
+
+        location / {
+                   proxy_pass http://0.0.0.0:8089;
+                   proxy_set_header Host $host;
+        }
+
+        error_page 404 /404.html;
+        location = /404.html {
+        }
+
+        error_page 500 502 503 504 /50x.html;
+        location = /50x.html {
+        }
+    }
+```
 # 意外處理
 ### nginx 403
 - 確認安全增強式linux狀態
