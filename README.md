@@ -88,5 +88,7 @@ server {
 nano /etc/selinux/config
 ```
 2. 將狀態改為關閉
+```
 #SELINUX=enforcing 
 SELINUX=disabled
+```
