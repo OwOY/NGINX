@@ -1,4 +1,5 @@
-# NGINX
+<img src="https://www.nginx.com/wp-content/uploads/2018/08/NGINX-logo-rgb-large.png">  
+
 - 下載Nginx  
 ```
 sudo yum -y install nginx
