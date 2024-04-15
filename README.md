@@ -1,100 +1,107 @@
 <img src="https://www.nginx.com/wp-content/uploads/2018/08/NGINX-logo-rgb-large.png">  
 
-- 下載Nginx  
-```
-sudo yum -y install nginx
-```
-- 檢視Nginx配置檔  
-```
-sudo nano /etc/nginx/nginx.conf
-```
-- 開啟Nginx
-```
-systemctl enable nginx
-```
-## 防火牆設定
-- 若沒有firewalld 可用下列指令下載
-```
-yum install -y firewalld
-```
-- 防火牆狀態  
-```
-systemctl status firewalld
-```
-- 防火牆開啟&關閉  
-```
-systemctl start firewalld
-systemctl stop firewalld
-systemctl reload firewalld
-```
-- 防火牆開機時自啟動  
-```
-systemctl enable firewalld
-```
-- 開放port(http、https、8089)
-```
-firewall-cmd --zone=public --permanent --add-service=http
-firewall-cmd --zone=public --permanent --add-service=https
-firewall-cmd --zone=public --add-port=8089/tcp --permanent   #永久新增
-```
-- 重新載入firewall設定
-```
-sudo firewall-cmd --reload
-```
-- 移除port
-```
-firewall-cmd --zone=public --remove-service=http
-firewall-cmd --zone=public --remove-service=http --permanent  #永久移除
-```
+<detail></detail>
 
-- 列出防火牆設定內容  
-```
-firewall-cmd --list-all
-```
-## Nginx設定  
-```
-# etc/nginx/nginx.conf
-server {
-        listen       80;
-        server_name  34.145.108.85;
-        root         /home/asd1234op/code/temp/4D;   #flask或是網頁位置
+<details>
+<summary style="font-size:30px">Introduction</summary>
+  <ol style='font-size:20px'>
+    <li><a href="#how-to-download">How To Download</a></li>
+    <li><a href="#nginx-config-路徑">Nginx Config 路徑</a></li>
+    <li><a href="#nginx-設定">Nginx 設定</a></li>
+    <li><a href="#憑證設定">憑證設定</a></li>
+    <li><a href="nginx.conf">Sample</a></li>
+</details>
 
-        # Load configuration files for the default server block.
-        include /etc/nginx/default.d/*.conf;
+<br>
+<br>
 
-        location / {
-                   proxy_pass http://0.0.0.0:8089;
-                   proxy_set_header Host $host;
+# How To Download
+- Linux
+    ```
+    sudo apt -y install nginx
+    ```
+- Docker
+    ```
+    docker pull nginx
+    ```
+
+# Nginx Config 路徑 
+- Nginx Default Path  
+(一般不會直接修改此檔案，而是在conf.d新增檔案)
+    ```
+    /etc/nginx/nginx.conf
+    ```  
+- Nginx Bonus Path
+    ```
+    /etc/nginx/conf.d/*.conf
+    ```
+
+# Nginx 設定
+- docker-compose 設定
+    ```docker
+    version: '3'
+
+    server:
+        image: nginx
+        container_name: server
+        restart: always
+        ports:
+            - 80:80
+            - 443:443
+        volumes:
+            - ./nginx/nginx.conf:/etc/nginx/conf.d/nginx.conf
+            - ./ssl:/etc/nginx/ssl
+        depends_on:
+            - frontend
+            - app
+        networks:
+            - test_network
+
+    networks:
+        test_network:
+            driver: bridge
+    ```
+- 反向代理設定
+    ```nginx
+    server {
+        listen 80;
+        server_name _;
+        location /proxy1 {
+            proxy_pass http://localhost:8000;
         }
-
-        error_page 404 /404.html;
-        location = /404.html {
-        }
-
-        error_page 500 502 503 504 /50x.html;
-        location = /50x.html {
+        location /proxy2 {
+            proxy_pass http://localhost:8001;
         }
     }
+    ```
+- 負載平衡設定
+    ```nginx
+    upstream backend {
+        server localhost:8000;
+        server localhost:8001;
+    }
+    server {
+        listen 80;
+        server_name _;
+        location / {
+            proxy_pass http://backend;
+        }
+    }
+    ```
+- Route Rewrite
+    ```nginx
+    server {
+        listen 80;
+        server_name _;
+        location /api/ {
+            rewrite ^/api/(.*)$ /$1 break;
+        }
+    }
+    ```
+
+# 憑證設定
 ```
-# 意外處理
-### nginx 403
-- 確認安全增強式linux狀態
-```
-/usr/sbin/sestatus
-```
-- 關閉安全增強式linux
-1. 修改config檔案
-```
-nano /etc/selinux/config
-```
-2. 將狀態改為關閉
-```
-#SELINUX=enforcing 
-SELINUX=disabled
-```
-# 新增憑證
-```
-openssl req -x509 -nodes -days 3650 -newkey rsa:2048 -keyout ssl.key -out ssl.csr 
+openssl req -x509 -nodes -days 3650 -newkey rsa:2048 -keyout ssl.key -out ssl.crt 
 ```
 - req  
 使用 X.509 Certificate Signing Request（CSR） Management 產生憑證。
