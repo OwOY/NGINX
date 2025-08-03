@@ -98,6 +98,24 @@
         }
     }
     ```
+- 緩衝設定
+```nginx
+    server {
+        listen 80;
+        server_name _;
+        location /api/ {
+            rewrite ^/api/(.*)$ /$1 break;
+            
+            proxy_buffering off：禁用緩衝，實時將數據發送給客戶端。
+            proxy_cache off：禁用緩存，確保每次請求都從後端獲取最新的數據。
+            proxy_no_cache 1：禁用代理緩存，確保每次請求都不會受到緩存影響。
+            proxy_max_temp_file_size 0：禁用寫入臨時文件，確保數據即時傳送。
+            send_timeout 3600s：設定長時間的超時限制，防止 SSE 連接被提前關閉。
+        }
+    }
+
+```
+
 
 # 憑證設定
 ```
